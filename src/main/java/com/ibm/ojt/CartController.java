@@ -28,11 +28,9 @@ public class CartController {
 	CartRepository cartRepository;
 	
 	@PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-	public void saveCart(@RequestBody Cart cart) {
-		Query query = new Query();
-		query.addCriteria(Criteria.where("customerId").exists(false));
-		Cart _cart = mongoTemplate.findOne(query, Cart.class, "cart");
-		if (_cart == null) {
+	public void createCart(@RequestBody Cart cart) {
+		Cart _cart = findByCustomerId(cart.getCustomerId());
+		if (_cart != null) {
 			System.out.println("CUSTOMER ID EXISTS");
 		}
 		else {
@@ -48,11 +46,8 @@ public class CartController {
 	
 	@DeleteMapping("/{customerId}")
 	public void deleteCart(@PathVariable String customerId) {
-		Cart _cart = findByCustomerId(customerId);
-		if (_cart != null) {
-			cartRepository.delete(_cart);
-			System.out.println("CART IS DELETED");
-		}
+		Query query = new Query(Criteria.where("customerId").is(customerId));
+		System.out.println(mongoTemplate.findAllAndRemove(query, "cart"));
 	}
 
 	@GetMapping("/{customerId}")
@@ -64,13 +59,19 @@ public class CartController {
 		return _cart;
 	}
 	
+	//adds a new item to cart or updates the quantity/size of item
+	//Problem_Area: How to and/or-operator the update logic
 	@PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE, value = "/{customerId}")
 	public void addToCart(@RequestBody CartItem cartItem, @PathVariable String customerId) {
-		Query query = new Query();
-		query.addCriteria(Criteria.where("customerId").is(customerId));
+		Criteria custCriteria = Criteria.where("customerId").is(customerId);
+		Criteria prodCriteria = Criteria.where("prodCode").exists(true);
+		Query query = new Query(new Criteria().andOperator(custCriteria, prodCriteria));
+		mongoTemplate.findOne(query, Cart.class, "cart");
+//		Query query = new Query();
+//		query.addCriteria(Criteria.where("customerId").is(customerId).and("prodCode").exists(true));
 		Update update = new Update();
 		update.addToSet("cartItems", cartItem);
-		mongoTemplate.updateFirst(query, update, "cart");
+		System.out.println(mongoTemplate.updateFirst(query, update, "cart"));
 	}
 	
 	//updates status of cart (e.g. When customer checks out cart and finishes the process, cart is closed for updates
