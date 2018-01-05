@@ -61,6 +61,7 @@ public class CartController {
 	
 	//adds a new item to cart or updates the quantity/size of item
 	//Problem_Area: What if same item but different sizes???
+	//	Answer: Dapat different UPCs for each size
 	@PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE, value = "/{customerId}/addupdate")
 	public void addToCart(@RequestBody CartItem cartItem, @PathVariable String customerId) {
 		Criteria custCriteria = Criteria.where("customerId").is(customerId);
@@ -69,12 +70,12 @@ public class CartController {
 		System.out.println(_cart);
 		Update update = new Update();
 		update.addToSet("cartItems", cartItem);
-		if (_cart != null) { // if new item is not in the cart
-			System.out.println("CART != NULL");
-		}
-		else {
+		if (_cart == null) { // if new item is not in the cart
 			System.out.println("CART == NULL");
 			query = new Query(new Criteria().andOperator(custCriteria, Criteria.where("cartItems.prodCode").in(cartItem.getProdCode())));
+		}
+		else {
+			System.out.println("CART != NULL");
 		}
 		System.out.println(mongoTemplate.updateFirst(query, update, "cart"));
 	}
