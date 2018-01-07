@@ -29,7 +29,7 @@ public class CartController {
 	
 	@PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
 	public void createCart(@RequestBody Cart cart) {
-		Cart _cart = findByCustomerId(cart.getCustomerId());
+		Cart _cart = cartRepository.findOne(cart.getCustomerId());
 		if (_cart != null) {
 			System.out.println("CUSTOMER ID EXISTS");
 		}
@@ -56,6 +56,12 @@ public class CartController {
 		query.addCriteria(Criteria.where("customerId").is(customerId));
 		Cart _cart = mongoTemplate.findOne(query, Cart.class, "cart");
 		System.out.println("FINDBYCUSTOMERID\n" + _cart);
+		if (_cart == null) {
+			_cart = new Cart();
+			_cart.setCustomerId(customerId);
+			_cart.setStatus("OP");
+			createCart(_cart);
+		}
 		return _cart;
 	}
 	
