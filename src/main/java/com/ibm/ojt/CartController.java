@@ -85,8 +85,8 @@ public class CartController {
 		}
 	}
 	
-	//deletes item from cart
-	@PutMapping(consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, value="/{customerId}/delete/all")
+	//deletes all items from cart
+	@PutMapping(value="/{customerId}/delete/all")
 	public void emptyCart(@PathVariable String customerId) {
 		Query query = new Query().addCriteria(Criteria.where("customerId").is(customerId));
 		Cart _cart = mongoTemplate.findOne(query, Cart.class, "cart");
@@ -95,10 +95,9 @@ public class CartController {
 		mongoTemplate.updateFirst(query, update, "cart");
 	}
 	
-//	updates status of cart (e.g. When customer checks out cart and finishes the process, cart is closed for updates
-//			until customer adds a new item to cart
-	@PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE, value = "/{customerId}/checkout")
-	public void updateCartStatus(@PathVariable String customerId) {
+	//updates status of cart to "CL" when customer checks out
+	@PutMapping("/{customerId}/checkout")
+	public void closeCart(@PathVariable String customerId) {
 		Query query = new Query().addCriteria(Criteria.where("customerId").is(customerId));
 		Update update = new Update().set("status", "CL");
 		mongoTemplate.updateFirst(query, update, "cart");
