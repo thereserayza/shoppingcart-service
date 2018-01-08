@@ -76,12 +76,7 @@ public class CartController extends RepositoryRestConfigurerAdapter{
 	public void addToCart(@RequestBody CartItem cartItem, @PathVariable String _id) {
 		Criteria custCriteria = Criteria.where("_id").is(_id);
 		Query query = new Query(new Criteria().andOperator(custCriteria, Criteria.where("cartItems.prodCode").nin(cartItem.getProdCode())));
-//		Cart _cart = mongoTemplate.findOne(query, Cart.class, "cart");
 		Update update = new Update().addToSet("cartItems", cartItem);
-//		if (_cart == null) { // if new item is not in the cart
-//			System.out.println("NISULOD KO NGARI" + _cart);
-//			query = new Query(new Criteria().andOperator(custCriteria, Criteria.where("cartItems.prodCode").in(cartItem.getProdCode())));
-//		}
 		mongoTemplate.updateFirst(query, update, "cart");
 	}
 	
@@ -91,8 +86,10 @@ public class CartController extends RepositoryRestConfigurerAdapter{
 	public void updateCartItem(@RequestBody CartItem cartItem, @PathVariable String _id) {
 		Criteria custCriteria = Criteria.where("_id").is(_id);
 		Query query = new Query(new Criteria().andOperator(custCriteria, Criteria.where("cartItems.prodCode").in(cartItem.getProdCode())));
+//		Cart _cart = mongoTemplate.findOne(query, Cart.class, "cart");
+//		System.out.println("CART -> " + _cart);
 		Update update = new Update().addToSet("cartItems", cartItem);
-		mongoTemplate.updateFirst(query, update, "cart");
+		System.out.println(mongoTemplate.updateFirst(query, update, "cart"));
 	}
 	
 	//deletes item from cart
