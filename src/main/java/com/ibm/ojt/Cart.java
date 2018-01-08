@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
+@Document(collection="cartdetail")
 public class Cart {
 	@Id
 	private String id;
@@ -13,6 +15,12 @@ public class Cart {
 	private List<CartItem> cartItems = new ArrayList<CartItem>();
 	private String status;
 	
+	public String getId() {
+		return id;
+	}
+	public void setId(String id) {
+		this.id = id;
+	}
 	public String getCustomerId() {
 		return customerId;
 	}
