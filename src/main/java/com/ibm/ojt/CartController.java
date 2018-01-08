@@ -1,6 +1,6 @@
 package com.ibm.ojt;
 
-import java.util.List;
+//import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -24,21 +24,21 @@ public class CartController {
 	@Autowired
 	MongoTemplate mongoTemplate;
 	
-	@Autowired
-	CartRepository cartRepository;
+//	@Autowired
+//	CartRepository cartRepository;
 	
 	@PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
 	public void createCart(@RequestBody Cart cart) {
-		Cart _cart = cartRepository.findOne(cart.getCustomerId());
-		if (_cart == null) {
-			cartRepository.save(cart);
-		}
+//		Cart _cart = cartRepository.findOne(cart.getCustomerId());
+//		if (_cart == null) {
+//			cartRepository.save(cart);
+//		}
 	}
 	
-	@GetMapping
-	public List<Cart> findAllCarts() {
-		return cartRepository.findAll();
-	}
+//	@GetMapping
+//	public List<Cart> findAllCarts() {
+//		return cartRepository.findAll();
+//	}
 	
 	@DeleteMapping("/{customerId}")
 	public void deleteCart(@PathVariable String customerId) {
