@@ -28,9 +28,6 @@ public class CartController extends RepositoryRestConfigurerAdapter{
 	@Autowired
 	MongoTemplate mongoTemplate;
 	
-//	@Autowired
-//	CartRepository cartRepository;
-	
 	public void configureRepositoryRestConfiguration(RepositoryRestConfiguration config) {
 		config.exposeIdsFor(Cart.class);
 	}
@@ -39,21 +36,18 @@ public class CartController extends RepositoryRestConfigurerAdapter{
 	public void createCart(@RequestBody Cart cart) {
 		Query query = new Query().addCriteria(Criteria.where("customerId").is(cart.getCustomerId()));
 		Cart _cart = mongoTemplate.findOne(query, Cart.class, "cart");
-//		Cart _cart = cartRepository.findOne(cart.getCustomerId());
 		if (_cart == null) {
 			_cart = new Cart();
 			_cart.setCustomerId(cart.getCustomerId());
 			_cart.setCartItems(cart.getCartItems());
 			_cart.setStatus("OP");
 			mongoTemplate.save(_cart, "cart");
-//			cartRepository.save(cart);
 		}
 	}
 	
 	@GetMapping
 	public List<Cart> findAllCarts() {
 		return mongoTemplate.findAll(Cart.class, "cart");
-//		return cartRepository.findAll();
 	}
 	
 	@DeleteMapping("/{_id}")
@@ -70,8 +64,6 @@ public class CartController extends RepositoryRestConfigurerAdapter{
 	}
 	
 	//adds a new item to cart
-	//Problem_Area: What if same item but different sizes???
-	//	Answer: Dapat different UPCs for each size
 	@PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, value = "/{_id}/add")
 	public void addToCart(@RequestBody CartItem cartItem, @PathVariable String _id) {
 		Criteria custCriteria = Criteria.where("_id").is(_id);
@@ -81,14 +73,11 @@ public class CartController extends RepositoryRestConfigurerAdapter{
 	}
 	
 	//Updates the quantity/size of item
-	//Problem_area: DI SYA MOUPDATE!!!
 	@PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE, value = "/{_id}/update")
 	public void updateCartItem(@RequestBody CartItem cartItem, @PathVariable String _id) {
 		Criteria custCriteria = Criteria.where("_id").is(_id);
 		Query query = new Query(new Criteria().andOperator(custCriteria, Criteria.where("cartItems.prodCode").in(cartItem.getProdCode())));
-//		Cart _cart = mongoTemplate.findOne(query, Cart.class, "cart");
-//		System.out.println("CART -> " + _cart);
-		Update update = new Update().addToSet("cartItems", cartItem);
+		Update update = new Update().set("cartItems.$.itemQty", cartItem.getItemQty());
 		System.out.println(mongoTemplate.updateFirst(query, update, "cart"));
 	}
 	
