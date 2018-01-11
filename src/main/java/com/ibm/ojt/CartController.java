@@ -57,6 +57,13 @@ public class CartController{
 		return _cart;
 	}
 	
+	@GetMapping("/{customerId}")
+	public Cart findByCustomerId(@PathVariable String customerId) {
+		Query query = new Query().addCriteria(Criteria.where("customerId").is(customerId));
+		Cart _cart = mongoTemplate.findOne(query, Cart.class, "cart");
+		return _cart;
+	}
+	
 	//adds a new item to cart
 	@PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, value = "/{_id}/add")
 	public void addToCart(@RequestBody CartItem cartItem, @PathVariable String _id) {
