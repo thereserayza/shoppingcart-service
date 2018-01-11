@@ -7,11 +7,11 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.data.repository.query.Param;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -44,41 +44,41 @@ public class CartController{
 		return mongoTemplate.findAll(Cart.class, "cart");
 	}
 	
-	@DeleteMapping
-	public void deleteCart(@Param("customerId") String customerId) {
-		Query query = new Query(Criteria.where("customerId").is(customerId));
+	@DeleteMapping("/{_id}")
+	public void deleteCart(@PathVariable String _id) {
+		Query query = new Query(Criteria.where("_id").is(_id));
 		mongoTemplate.findAllAndRemove(query, "cart");
 	}
 
-	@GetMapping
-	public Cart findByCartId(@Param("customerId") String customerId) {
-		Query query = new Query().addCriteria(Criteria.where("customerId").is(customerId));
+	@GetMapping("/{_id}")
+	public Cart findByCartId(@PathVariable String _id) {
+		Query query = new Query().addCriteria(Criteria.where("_id").is(_id));
 		Cart _cart = mongoTemplate.findOne(query, Cart.class, "cart");
 		return _cart;
 	}
 	
 	//adds a new item to cart
-	@PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, value = "/add")
-	public void addToCart(@RequestBody CartItem cartItem, @Param("customerId") String customerId) {
-		Criteria custCriteria = Criteria.where("customerId").is(customerId);
+	@PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, value = "/{_id}/add")
+	public void addToCart(@RequestBody CartItem cartItem, @PathVariable String _id) {
+		Criteria custCriteria = Criteria.where("_id").is(_id);
 		Query query = new Query(new Criteria().andOperator(custCriteria, Criteria.where("cartItems.prodCode").nin(cartItem.getProdCode())));
 		Update update = new Update().addToSet("cartItems", cartItem);
 		mongoTemplate.updateFirst(query, update, "cart");
 	}
 	
 	//Updates the quantity/size of item
-	@PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE, value = "/update")
-	public void updateCartItem(@RequestBody CartItem cartItem, @Param("customerId") String customerId) {
-		Criteria custCriteria = Criteria.where("customerId").is(customerId);
+	@PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE, value = "/{_id}/update")
+	public void updateCartItem(@RequestBody CartItem cartItem, @PathVariable String _id) {
+		Criteria custCriteria = Criteria.where("_id").is(_id);
 		Query query = new Query(new Criteria().andOperator(custCriteria, Criteria.where("cartItems.prodCode").in(cartItem.getProdCode())));
 		Update update = new Update().set("cartItems.$.itemQty", cartItem.getItemQty());
 		System.out.println(mongoTemplate.updateFirst(query, update, "cart"));
 	}
 	
 	//deletes item from cart
-	@DeleteMapping(consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, value="/delete")
-	public void deleteCartItem(@RequestBody CartItem cartItem, @Param("customerId") String customerId) {
-		Query query = new Query().addCriteria(Criteria.where("customerId").is(customerId).and("cartItems.prodCode").in(cartItem.getProdCode()));
+	@DeleteMapping(consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, value="/{_id}/delete")
+	public void deleteCartItem(@RequestBody CartItem cartItem, @PathVariable String _id) {
+		Query query = new Query().addCriteria(Criteria.where("_id").is(_id).and("cartItems.prodCode").in(cartItem.getProdCode()));
 		Cart _cart = mongoTemplate.findOne(query, Cart.class, "cart");
 		if (_cart != null) { // if new item is not in the cart
 			Update update = new Update().pull("cartItems", cartItem);
@@ -87,9 +87,9 @@ public class CartController{
 	}
 	
 	//deletes all items from cart
-	@PutMapping(value="/delete/all")
-	public void emptyCart(@Param("customerId") String customerId) {
-		Query query = new Query().addCriteria(Criteria.where("customerId").is(customerId));
+	@PutMapping(value="/{_id}/delete/all")
+	public void emptyCart(@PathVariable String _id) {
+		Query query = new Query().addCriteria(Criteria.where("_id").is(_id));
 		Cart _cart = mongoTemplate.findOne(query, Cart.class, "cart");
 		_cart.getCartItems().clear();
 		Update update = new Update().set("cartItems", _cart.getCartItems());
@@ -97,9 +97,9 @@ public class CartController{
 	}
 	
 	//updates status of cart to "CL" when customer checks out
-	@PutMapping("/checkout")
-	public void closeCart(@Param("customerId") String customerId) {
-		Query query = new Query().addCriteria(Criteria.where("customerId").is(customerId));
+	@PutMapping("/{_id}/checkout")
+	public void closeCart(@PathVariable String _id) {
+		Query query = new Query().addCriteria(Criteria.where("id").is(_id));
 		Update update = new Update().set("status", "CL");
 		mongoTemplate.updateFirst(query, update, "cart");
 	}
