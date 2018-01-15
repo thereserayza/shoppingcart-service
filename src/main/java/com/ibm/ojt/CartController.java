@@ -50,14 +50,14 @@ public class CartController{
 		mongoTemplate.findAllAndRemove(query, "cart");
 	}
 
-	@GetMapping("/{_id}")
+	@GetMapping("/search/caid/{cartId}")
 	public Cart findByCartId(@PathVariable String _id) {
 		Query query = new Query().addCriteria(Criteria.where("_id").is(_id));
 		Cart _cart = mongoTemplate.findOne(query, Cart.class, "cart");
 		return _cart;
 	}
 	
-	@GetMapping("/{customerId}")
+	@GetMapping("/search/cuid/{customerId}")
 	public Cart findByCustomerId(@PathVariable String customerId) {
 		Query query = new Query().addCriteria(Criteria.where("customerId").is(customerId));
 		Cart _cart = mongoTemplate.findOne(query, Cart.class, "cart");

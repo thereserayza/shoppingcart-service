@@ -1,4 +1,5 @@
 com\ibm\ojt\CartItem.class
 com\ibm\ojt\CartController.class
+com\ibm\ojt\ControllerConfig.class
 com\ibm\ojt\Application.class
 com\ibm\ojt\Cart.class
