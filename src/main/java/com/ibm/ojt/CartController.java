@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -34,6 +36,7 @@ public class CartController{
 			_cart = new Cart();
 			_cart.setCustomerId(cart.getCustomerId());
 			_cart.setCartItems(cart.getCartItems());
+			_cart.setTotalPrice(cart.getTotalPrice());
 			_cart.setStatus("OP");
 			mongoTemplate.save(_cart, "cart");
 		}
@@ -50,7 +53,7 @@ public class CartController{
 		mongoTemplate.findAllAndRemove(query, "cart");
 	}
 
-	@GetMapping("/search/caid/{cartId}")
+	@GetMapping("/search/caid/{_id}")
 	public Cart findByCartId(@PathVariable String _id) {
 		Query query = new Query().addCriteria(Criteria.where("_id").is(_id));
 		Cart _cart = mongoTemplate.findOne(query, Cart.class, "cart");
@@ -69,19 +72,31 @@ public class CartController{
 	public void addToCart(@RequestBody CartItem cartItem, @PathVariable String _id) {
 		Criteria custCriteria = Criteria.where("_id").is(_id);
 		Query query = new Query(new Criteria().andOperator(custCriteria, Criteria.where("cartItems.prodCode").nin(cartItem.getProdCode())));
-		Update update = new Update().addToSet("cartItems", cartItem);
-		mongoTemplate.updateFirst(query, update, "cart");
+		Cart _cart = mongoTemplate.findOne(query, Cart.class, "cart");
+		Update update = new Update();
+		if (_cart != null) {
+			update.addToSet("cartItems", cartItem);
+		} else {
+			query = new Query(new Criteria().andOperator(custCriteria, Criteria.where("cartItems.prodCode").in(cartItem.getProdCode())));
+			_cart = mongoTemplate.findOne(query, Cart.class, "cart");
+			update.inc("cartItems.$.itemQty", 1);
+		}
+		update.set("totalPrice", _cart.getTotalPrice() + cartItem.getSubtotal());
+		System.out.println(mongoTemplate.updateFirst(query, update, "cart"));
 	}
 	
-	//Updates the quantity/size of item
+	//Updates the quantity of item
 	@PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE, value = "/{_id}/update")
 	public void updateCartItem(@RequestBody CartItem cartItem, @PathVariable String _id) {
 		Criteria custCriteria = Criteria.where("_id").is(_id);
 		Query query = new Query(new Criteria().andOperator(custCriteria, Criteria.where("cartItems.prodCode").in(cartItem.getProdCode())));
 		Update update = new Update().set("cartItems.$.itemQty", cartItem.getItemQty());
-		System.out.println(mongoTemplate.updateFirst(query, update, "cart"));
+		Aggregation agg = Aggregation.newAggregation(Aggregation.match(custCriteria), Aggregation.unwind("cartItems"), Aggregation.group("cartItems").sum("cartItems.subtotal").as("subtotal"));
+		AggregationResults<Double> results = mongoTemplate.aggregate(agg, "cart", Double.class);
+		update.set("totalPrice", results.getUniqueMappedResult());
+		mongoTemplate.updateFirst(query, update, "cart");
 	}
-	
+
 	//deletes item from cart
 	@DeleteMapping(consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, value="/{_id}/delete")
 	public void deleteCartItem(@RequestBody CartItem cartItem, @PathVariable String _id) {
@@ -89,6 +104,7 @@ public class CartController{
 		Cart _cart = mongoTemplate.findOne(query, Cart.class, "cart");
 		if (_cart != null) { // if new item is not in the cart
 			Update update = new Update().pull("cartItems", cartItem);
+			update.set("totalPrice", _cart.getTotalPrice() - cartItem.getSubtotal());
 			mongoTemplate.updateFirst(query, update, "cart");
 		}
 	}
@@ -100,6 +116,7 @@ public class CartController{
 		Cart _cart = mongoTemplate.findOne(query, Cart.class, "cart");
 		_cart.getCartItems().clear();
 		Update update = new Update().set("cartItems", _cart.getCartItems());
+		update.set("totalPrice", 0);
 		mongoTemplate.updateFirst(query, update, "cart");
 	}
 	
