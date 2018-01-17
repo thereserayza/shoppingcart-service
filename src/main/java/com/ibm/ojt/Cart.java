@@ -13,7 +13,7 @@ public class Cart {
 	
 	private String customerId;
 	private List<CartItem> cartItems = new ArrayList<CartItem>();
-	private double totalPrice;
+	private Double totalPrice;
 	private String status;
 	
 	public String getId() {
@@ -34,10 +34,10 @@ public class Cart {
 	public void setCartItems(List<CartItem> cartItems) {
 		this.cartItems = cartItems;
 	}
-	public double getTotalPrice() {
+	public Double getTotalPrice() {
 		return totalPrice;
 	}
-	public void setTotalPrice(double totalPrice) {
+	public void setTotalPrice(Double totalPrice) {
 		this.totalPrice = totalPrice;
 	}
 	public String getStatus() {

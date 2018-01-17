@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.mongodb.DBObject;
+
 @CrossOrigin
 @RestController
 @RequestMapping("/cart")
@@ -36,7 +38,7 @@ public class CartController{
 			_cart = new Cart();
 			_cart.setCustomerId(cart.getCustomerId());
 			_cart.setCartItems(cart.getCartItems());
-			_cart.setTotalPrice(cart.getTotalPrice());
+			_cart.setTotalPrice(0.00);
 			_cart.setStatus("OP");
 			mongoTemplate.save(_cart, "cart");
 		}
@@ -80,9 +82,10 @@ public class CartController{
 			query = new Query(new Criteria().andOperator(custCriteria, Criteria.where("cartItems.prodCode").in(cartItem.getProdCode())));
 			_cart = mongoTemplate.findOne(query, Cart.class, "cart");
 			update.inc("cartItems.$.itemQty", 1);
+			update.inc("cartItems.$.subtotal", cartItem.getSubtotal());
 		}
 		update.set("totalPrice", _cart.getTotalPrice() + cartItem.getSubtotal());
-		System.out.println(mongoTemplate.updateFirst(query, update, "cart"));
+		mongoTemplate.updateFirst(query, update, "cart");
 	}
 	
 	//Updates the quantity of item
@@ -91,10 +94,12 @@ public class CartController{
 		Criteria custCriteria = Criteria.where("_id").is(_id);
 		Query query = new Query(new Criteria().andOperator(custCriteria, Criteria.where("cartItems.prodCode").in(cartItem.getProdCode())));
 		Update update = new Update().set("cartItems.$.itemQty", cartItem.getItemQty());
-		Aggregation agg = Aggregation.newAggregation(Aggregation.match(custCriteria), Aggregation.unwind("cartItems"), Aggregation.group("cartItems").sum("cartItems.subtotal").as("subtotal"));
-		AggregationResults<Double> results = mongoTemplate.aggregate(agg, "cart", Double.class);
-		update.set("totalPrice", results.getUniqueMappedResult());
+		update.set("cartItems.$.subtotal", cartItem.getSubtotal());
 		mongoTemplate.updateFirst(query, update, "cart");
+		Aggregation agg = Aggregation.newAggregation(Aggregation.unwind("cartItems"), Aggregation.group().sum("cartItems.subtotal").as("subtotal"));
+		AggregationResults<DBObject> results = mongoTemplate.aggregate(agg, "cart", DBObject.class);
+		Update _update = new Update().set("totalPrice", results.getUniqueMappedResult().get("subtotal"));
+		mongoTemplate.updateFirst(query, _update, "cart");
 	}
 
 	//deletes item from cart
@@ -110,13 +115,13 @@ public class CartController{
 	}
 	
 	//deletes all items from cart
-	@PutMapping(value="/{_id}/delete/all")
+	@DeleteMapping(value="/{_id}/delete/all")
 	public void emptyCart(@PathVariable String _id) {
 		Query query = new Query().addCriteria(Criteria.where("_id").is(_id));
 		Cart _cart = mongoTemplate.findOne(query, Cart.class, "cart");
 		_cart.getCartItems().clear();
 		Update update = new Update().set("cartItems", _cart.getCartItems());
-		update.set("totalPrice", 0);
+		update.set("totalPrice", 0.00);
 		mongoTemplate.updateFirst(query, update, "cart");
 	}
 	
