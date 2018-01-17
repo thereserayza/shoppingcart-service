@@ -54,15 +54,8 @@ public class CartController{
 		Query query = new Query(Criteria.where("_id").is(_id));
 		mongoTemplate.findAllAndRemove(query, "cart");
 	}
-
-	@GetMapping("/search/caid/{_id}")
-	public Cart findByCartId(@PathVariable String _id) {
-		Query query = new Query().addCriteria(Criteria.where("_id").is(_id));
-		Cart _cart = mongoTemplate.findOne(query, Cart.class, "cart");
-		return _cart;
-	}
 	
-	@GetMapping("/search/cuid/{customerId}")
+	@GetMapping("/{customerId}")
 	public Cart findByCustomerId(@PathVariable String customerId) {
 		Query query = new Query().addCriteria(Criteria.where("customerId").is(customerId));
 		Cart _cart = mongoTemplate.findOne(query, Cart.class, "cart");
@@ -70,9 +63,9 @@ public class CartController{
 	}
 	
 	//adds a new item to cart
-	@PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, value = "/{_id}/add")
-	public void addToCart(@RequestBody CartItem cartItem, @PathVariable String _id) {
-		Criteria custCriteria = Criteria.where("_id").is(_id);
+	@PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, value = "/{customerId}/add")
+	public void addToCart(@RequestBody CartItem cartItem, @PathVariable String customerId) {
+		Criteria custCriteria = Criteria.where("customerId").is(customerId);
 		Query query = new Query(new Criteria().andOperator(custCriteria, Criteria.where("cartItems.prodCode").nin(cartItem.getProdCode())));
 		Cart _cart = mongoTemplate.findOne(query, Cart.class, "cart");
 		Update update = new Update();
