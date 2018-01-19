@@ -14,6 +14,6 @@ public class ControllerConfig  extends RepositoryRestConfigurerAdapter{
 	
 	public void addCorsMappings(CorsRegistry registry) {
 		registry.addMapping("/**")
-				.allowedOrigins("http://kariteun-shopping.mybluemix.net", "http://localhost:3000");
+				.allowedOrigins("http://kariteun-shopping.mybluemix.net", "https://kariteun-shopping.mybluemix.net", "http://localhost:3000");
 	}
 }

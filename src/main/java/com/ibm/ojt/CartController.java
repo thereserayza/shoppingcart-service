@@ -74,7 +74,7 @@ public class CartController{
 		} else {
 			query = new Query(new Criteria().andOperator(custCriteria, Criteria.where("cartItems.prodCode").in(cartItem.getProdCode())));
 			_cart = mongoTemplate.findOne(query, Cart.class, "cart");
-			update.inc("cartItems.$.itemQty", 1);
+			update.inc("cartItems.$.itemQty", cartItem.getItemQty());
 			update.inc("cartItems.$.subtotal", cartItem.getSubtotal());
 		}
 		update.set("totalPrice", _cart.getTotalPrice() + cartItem.getSubtotal());
