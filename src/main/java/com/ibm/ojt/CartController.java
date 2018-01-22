@@ -96,7 +96,7 @@ public class CartController{
 	}
 
 	//deletes item from cart
-	@DeleteMapping(consumes = MediaType.APPLICATION_JSON_VALUE, value="/{customerId}/delete/{prodcode}")
+	@DeleteMapping(value="/{customerId}/delete/{prodcode}")
 	public void deleteCartItem(@PathVariable String customerId, @PathVariable String prodcode) {
 		Criteria custCriteria = Criteria.where("customerId").is(customerId);
 		Query query = new Query().addCriteria(custCriteria.and("cartItems.prodCode").in(prodcode));
