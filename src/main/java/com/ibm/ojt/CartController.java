@@ -96,13 +96,21 @@ public class CartController{
 	}
 
 	//deletes item from cart
-	@DeleteMapping(consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, value="/{customerId}/delete")
-	public void deleteCartItem(@RequestBody CartItem cartItem, @PathVariable String customerId) {
-		Query query = new Query().addCriteria(Criteria.where("customerId").is(customerId).and("cartItems.prodCode").in(cartItem.getProdCode()));
+	@DeleteMapping(consumes = MediaType.APPLICATION_JSON_VALUE, value="/{customerId}/delete/{prodcode}")
+	public void deleteCartItem(@PathVariable String customerId, @PathVariable String prodcode) {
+		Criteria custCriteria = Criteria.where("customerId").is(customerId);
+		Query query = new Query().addCriteria(custCriteria.and("cartItems.prodCode").in(prodcode));
 		Cart _cart = mongoTemplate.findOne(query, Cart.class, "cart");
-		if (_cart != null) { // if new item is not in the cart
-			Update update = new Update().pull("cartItems", cartItem);
-			update.set("totalPrice", _cart.getTotalPrice() - cartItem.getSubtotal());
+		CartItem _cartItem = null;
+		for (CartItem i : _cart.getCartItems()) {
+			if (i.getProdCode().equals(prodcode)) {
+				_cartItem = i;
+				break;
+			}
+		}
+		if (_cart != null && _cartItem != null) {
+			Update update = new Update().pull("cartItems", _cartItem);
+			update.set("totalPrice", _cart.getTotalPrice() - _cartItem.getSubtotal());
 			mongoTemplate.updateFirst(query, update, "cart");
 		}
 	}
