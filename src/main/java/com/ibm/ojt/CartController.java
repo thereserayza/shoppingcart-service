@@ -62,7 +62,6 @@ public class CartController{
 		return _cart;
 	}
 	
-	//adds a new item to cart
 	@PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, value = "/{customerId}/add")
 	public void addToCart(@RequestBody CartItem cartItem, @PathVariable String customerId) {
 		Criteria custCriteria = Criteria.where("customerId").is(customerId);
@@ -81,7 +80,6 @@ public class CartController{
 		mongoTemplate.updateFirst(query, update, "cart");
 	}
 	
-	//Updates the quantity of item
 	@PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE, value = "/{customerId}/update")
 	public void updateCartItem(@RequestBody CartItem cartItem, @PathVariable String customerId) {
 		Criteria custCriteria = Criteria.where("customerId").is(customerId);
@@ -95,7 +93,6 @@ public class CartController{
 		mongoTemplate.updateFirst(query, _update, "cart");
 	}
 
-	//deletes item from cart
 	@DeleteMapping(value="/{customerId}/delete/{prodcode}")
 	public void deleteCartItem(@PathVariable String customerId, @PathVariable String prodcode) {
 		Criteria custCriteria = Criteria.where("customerId").is(customerId);
@@ -115,7 +112,6 @@ public class CartController{
 		}
 	}
 	
-	//deletes all items from cart
 	@DeleteMapping(value="/{customerId}/delete/all")
 	public void emptyCart(@PathVariable String customerId) {
 		Query query = new Query().addCriteria(Criteria.where("customerId").is(customerId));
@@ -123,14 +119,6 @@ public class CartController{
 		_cart.getCartItems().clear();
 		Update update = new Update().set("cartItems", _cart.getCartItems());
 		update.set("totalPrice", 0.00);
-		mongoTemplate.updateFirst(query, update, "cart");
-	}
-	
-	//updates status of cart to "CL" when customer checks out
-	@PutMapping("/{customerId}/checkout")
-	public void closeCart(@PathVariable String customerId) {
-		Query query = new Query().addCriteria(Criteria.where("customerId").is(customerId));
-		Update update = new Update().set("status", "CL");
 		mongoTemplate.updateFirst(query, update, "cart");
 	}
 }
